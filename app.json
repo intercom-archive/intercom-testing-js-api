@@ -27,7 +27,6 @@
     "APP2_SECRET": {
       "required": false,
       "description": "If you have multiple apps, the secret key of your 2nd app"
-    },
-
+    }
   }
 }

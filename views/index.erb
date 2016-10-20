@@ -1,0 +1,368 @@
+<meta name=viewport content="width=device-width,initial-scale=1">
+<style>
+button, input {
+	display: block;
+}
+h4 {
+	margin: 0;
+	margin-top: 1em;
+}
+fieldset{
+	padding: 3px;
+}
+textarea {
+	font-family: monospace;
+}
+
+.intercom-launcher-frame{
+	left: 100px;
+}
+
+</style>
+
+<div class="section">
+	<h1>App to Use</h1>
+	<select id="apps"></select>
+</div>
+
+<div class="section">
+	<h1>Login / Logout</h1>
+	<pre>Intercom('boot', {app_id: APP_ID})</pre>
+	<button id="boot">Boot as Visitor i.e. Acquire Install. </button>
+	<fieldset>
+		<label>name<input id="userName" class="input userDetails" data-attr="name" placeholder="user name"></label>
+		<label>email<input id="userEmail" class="input userDetails" data-attr="email" placeholder="user email"></label>
+		<label>user_id<input id="userID" class="input userDetails" data-attr="user_id" placeholder="user id"></label>
+
+		<pre>Intercom('boot', {app_id: APP_ID, email: EMAIL, user_id: USER_ID, name: NAME})</pre>
+		<button id="bootUser">Boot as User i.e. User Install</button>
+
+		<pre>Intercom('update', {email: EMAIL, user_id: USER_ID, name: NAME})</pre>
+		<button id="loginUser">Login User i.e. User Install</button>
+	</fieldset>
+	<pre>Intercom('shutdown')</pre>
+    <button id="logout">Logout/Shutdown</button>
+</div>
+
+<div class="section">
+	<h1>Attributes</h1>
+	<fieldset>
+		<h4>Update Metadata via individual attributes</h4>
+		<pre>Intercom('update', {attribute_name: attribute_value})</pre>
+		<label>Name<input id="attributeName" placeholder="attribute name"></label>
+		<label>Value<input id="attributeValue" placeholder="attribute value"></label>
+		<button id="attributeUpdate">Update data</button>
+		<h4>Update via raw Javascript</h4>
+		<pre>Intercom('update', attributes)</pre>
+		<textarea id="attributeJS"></textarea>
+		<button id="attributeUpdateJS">Update data</button>
+	</fieldset>
+</div>
+<div class="section">
+	<h1>Events</h1>
+	<label>Name<input id="eventName" placeholder="event name"></label>
+	<fieldset>
+		<h4>Update Metadata via individual attributes</h4>
+		<pre>Intercom('trackEvent', eventName) / 
+Intercom('trackEvent', eventName, {eventMetadataName: eventMetadataValue})</pre>
+		<label>Metadata name<input id="eventMetadataName" placeholder="metadata name"></label>
+		<label>Metadata value<input id="eventMetadataValue" placeholder="metadata value"></label>
+		<button id="eventSubmit">Submit Event</button>
+
+		<h4>Update Metadata via raw Javascript</h4>
+		<pre>Intercom('trackEvent', eventName, eventMetadata)</pre>
+		<textarea id="eventMetadataJS"></textarea>
+		<button id="eventSubmitJS">Submit Event via Javascript</button>
+	</fieldset>
+</div>
+
+
+
+
+
+<script src="jquery.min.js"></script>
+<script>
+function log(str, data){
+	if(data)
+		console.log(str, data);
+	else
+		console.log(str);
+}
+
+function getCurrentAppID(){ return getCurrentAppDetails().id || ""; }
+function getCurrentAppSecret(){ return getCurrentAppDetails().secret || ""; }
+
+function getAppName(){ return getUIAppName().val(); }
+function getAppID(){ return getUIAppID().val(); }
+function getAppSecret(){ return getUIAppSecret().val(); }
+function getUserName(){ return getUIUserName().val(); }
+function getUserEmail(){ return getUIUserEmail().val(); }
+function getUserID(){ return getUIUserID().val(); }
+function getAttrName(){ return getUIAttrName().val(); }
+function getAttrValue(){ return getUIAttrValue().val(); }
+function getAttrJS(){ return getUIAttrJS().val(); }
+function getEventName(){ return getUIEventName().val(); }
+function getEventMetadataName(){ return getUIEventMetadataName().val(); }
+function getEventMetadataValue(){ return getUIEventMetadataValue().val(); }
+function getEventMetadataJS(){ return getUIEventMetadataJS().val(); }
+
+
+function getUIAppName(){ return $("#appName"); }
+function getUIAppID(){ return $("#appID"); }
+function getUIAppSecret(){ return $("#appSecret"); }
+function getUIUserName(){ return $("#userName"); }
+function getUIUserEmail(){ return $("#userEmail"); }
+function getUIUserID(){ return $("#userID"); }
+function getUIAttrName(){ return $("#attributeName"); }
+function getUIAttrValue(){ return $("#attributeValue"); }
+function getUIAttrJS(){ return $("#attributeJS"); }
+function getUIEventName(){ return $("#eventName"); }
+function getUIEventMetadataName(){ return $("#eventMetadataName"); }
+function getUIEventMetadataValue(){ return $("#eventMetadataValue"); }
+function getUIEventMetadataJS(){ return $("#eventMetadataJS"); }
+
+function getUIAppList(){ return $("#apps"); }
+
+function getCurrentAppDetails(){
+	var app = (getUIAppList().val() || "").split("||");
+	var data = {
+		id: app[0],
+		secret: app[1]
+	};
+	log("Current app", data);
+	return data;
+}
+function generateIntercomSettingsObject(dataObject, callback){
+	dataObject = dataObject || {}
+	dataObject.app_id = getCurrentAppID();
+	var dataToHash = (dataObject.user_id || dataObject.email);
+	if(dataToHash){
+    $.ajax({
+      "url": "/user_hash"
+      ,"method": "POST"
+      ,"data": {mode: "user_hash",app_id: dataObject.app_id, data: dataToHash}
+      ,"dataType": "json"
+      ,"success": function(data){
+        dataObject.user_hash = data.user_hash;
+        if(callback) callback(dataObject);
+      }
+    });
+    return;
+	}
+	log("Generated intercomSettings", dataObject);
+  if(callback) callback(dataObject)
+	else return dataObject;
+}
+function getLoginDetails(){
+	var data = {};
+	if(getUserName()) data.name = getUserName();
+	if(getUserEmail()) data.email = getUserEmail();
+	if(getUserID()) data.user_id = getUserID();
+	return data;
+}
+function getAttrData(){
+	var data = {};
+	if(getAttrName()) data[getAttrName()] = getAttrValue();
+	return data;
+}
+function getEventMetadata(){
+	var data = {};
+	var name = getEventMetadataName();
+	if(name) data[name] = getEventMetadataValue();
+	return data;
+}
+function getEventData(){
+	var data = { name: getEventName() };
+	var metadata = getEventMetadata();
+	if(metadata != null) data.metadata = metadata;
+	return data;
+}
+function getAppData(){
+	var data = {};
+	if(getAppID()){
+		data.id = getAppID();
+		data.name = getAppName() || data.id;
+	}
+	return data;
+}
+
+function dbGetValue(key){
+	return localStorage.getItem(key) || "";
+}
+function dbSetValue(key,data){
+	localStorage.setItem(key, data);
+}
+function loadSavedData(){
+  uiLoadSavedApps(uilLoadPreviousValues);
+};
+function dbGetLastApp(){
+	return dbGetValue("last_app");
+}
+function uilLoadPreviousValues(){
+	getUIAppList().val(dbGetLastApp());
+	getUIUserName().val(dbGetValue("last_user_name"));
+	getUIUserEmail().val(dbGetValue("last_user_email"));
+	getUIUserID().val(dbGetValue("last_user_id"));
+	getUIAttrName().val(dbGetValue("last_attribute_name"));
+	getUIAttrValue().val(dbGetValue("last_attribute_value"));
+	getUIAttrJS().val(dbGetValue("last_attribute_js"));
+	getUIEventName().val(dbGetValue("last_event_name"));
+	getUIEventMetadataName().val(dbGetValue("last_event_metadata_name"));
+	getUIEventMetadataValue().val(dbGetValue("last_event_metadata_value"));
+	getUIEventMetadataJS().val(dbGetValue("last_event_metadata_js"));
+
+
+}
+
+function uiLoadSavedApps(callback){
+	var apps = getDBSavedApps(function(apps){
+    log("Loading saved apps", apps);
+  	var appsUI = getUIAppList();
+  	appsUI.empty();
+  	var appUI = $("<option value=''>-- Select app --</option>");
+  	appsUI.append(appUI);
+  	for(var i = 0; i < apps.length; i++){
+  		appUI = $("<option></option>");
+  		var app = apps[i];
+  		appUI.text(app.name);
+  		appUI.val(app.id);
+  		appsUI.append(appUI);
+  	}
+    if(callback)callback();
+  });
+}
+function getDBSavedApps(callback){
+  $.ajax({
+    "url": "/apps"
+    ,"dataType": "json"
+    ,"success": function(apps){
+      var appList = [];
+  		for(var i = 0; i < apps.length; i++){
+  			var app = parseSavedApp(apps[i]);
+  			if(app) appList.push(app);
+  		}
+      if(callback) callback(appList);
+    }
+  });
+}
+function parseSavedApp(app){
+	var data = {};
+	if(!app.id) return null;
+	data.id = app.id;
+	data.name = app.name || app.id;
+	return data;
+}
+
+function bindEventHandlers(){
+
+	getUIAppList().change(function(){
+		log(getUIAppList().val());
+		dbSetValue("last_app", getUIAppList().val());
+		if(confirm("Reload page? Needed for changing to/from MV3")){
+			location.reload();
+		}
+	});
+
+	$("#logout").click(function(){
+		log("Logout");
+		Intercom("shutdown");
+	});
+	$("#boot").click(function(){
+		log("Initialise Acquire: Intercom('boot', {app_id: APP_ID});");
+		Intercom("boot", generateIntercomSettingsObject());
+	});
+	$("#bootUser").click(function(){
+		log("Initialise User: Intercom('boot', user_data);");
+
+		var loginData = getLoginDetails();
+		dbSetValue("last_user_name", loginData.name || "");
+		dbSetValue("last_user_email", loginData.email || "");
+		dbSetValue("last_user_id", loginData.user_id || "");
+
+    generateIntercomSettingsObject(loginData, function(data){ Intercom("boot", data) });
+	});
+	$("#loginUser").click(function(){
+		log("Update User: Intercom('update', user_data);");
+		var loginData = getLoginDetails();
+		dbSetValue("last_user_name", loginData.name || "");
+		dbSetValue("last_user_email", loginData.email || "");
+		dbSetValue("last_user_id", loginData.user_id || "");
+    	generateIntercomSettingsObject(loginData, function(data){ Intercom("update", data) });
+	});
+
+	$("#attributeUpdate").click(function(){
+		var attributeData = getAttrData();
+		log("Update Attribute: Intercom('update');", attributeData);
+
+		for(var key in attributeData){
+			dbSetValue("last_attribute_name", key);
+			dbSetValue("last_attribute_value", attributeData[key] || "");
+		}
+
+		Intercom("update", attributeData);
+	});
+	$("#attributeUpdateJS").click(function(){
+		var attributeData = getAttrJS();
+		var attributeDataJson = eval(attributeData);
+		log("Update Attribute: Intercom('update');", attributeDataJson);
+		dbSetValue("last_attribute_js", attributeData);
+		Intercom("update", attributeDataJson);
+	});
+
+	$("#eventSubmit").click(function(){
+		var eventData = getEventData();
+		log("Submit Event: Intercom('trackEvent')", eventData);
+
+		dbSetValue("last_event_name", eventData.name || "");
+		if(eventData.metadata != null){
+			for(var key in eventData.metadata){
+				dbSetValue("last_event_metadata_name", key);
+				dbSetValue("last_event_metadata_value", eventData.metadata[key] || "");
+			}
+			Intercom("trackEvent", getEventName(), eventData.metadata);
+		}
+		else{
+			dbSetValue("last_event_metadata_name", "");
+			dbSetValue("last_event_metadata_value", "");
+			Intercom("trackEvent", getEventName());
+		}
+	});
+	$("#eventSubmitJS").click(function(){
+		var eventData = getEventData();
+		log("Submit Event: Intercom('trackEvent')", eventData);
+
+		dbSetValue("last_event_name", eventData.name || "");
+
+		var eventMetadataJS = getEventMetadataJS();
+		var eventMetadataJSJson = JSON.parse(eventMetadataJS);
+		dbSetValue("last_event_metadata_js", eventMetadataJS);
+		Intercom("trackEvent", getEventName(), eventMetadataJSJson);
+	});	
+
+}
+$(document).ready(function(){
+	loadSavedData();
+	bindEventHandlers();
+  var initialised = false;
+  $(getUIAppList()).on('change', function(){
+      if(!initialised){
+        initialised = true;
+        if($(getUIAppList()).find(":selected").size() > 0){
+      		log("Auto booting based on previous details");
+      		Intercom("boot", generateIntercomSettingsObject());
+      	}
+      }
+  })
+
+});
+
+
+var APP_ID = ((dbGetLastApp() || "").split("||")[0]) || getCurrentAppID();
+log("APP_ID: " + APP_ID);
+(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;
+s.src='https://widget.intercom.io/widget/'+APP_ID;var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()
+
+
+
+
+</script>

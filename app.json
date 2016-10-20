@@ -1,0 +1,33 @@
+{
+  "name": "Intercom - Testing JS API",
+  "description": "A way to test the Intercom Javascript API",
+  "repository": "https://github.com/thewheat/intercom-test-js-api",
+  "keywords": ["intercom", "javascript", "api", "test"],
+  "env": {
+    "APP1": {
+      "required": true,
+      "description": "the app_id of your main app"
+    },
+    "APP1_NAME": {
+      "required": false,
+      "description": "the name of your app"
+    },
+    "APP1_SECRET": {
+      "required": false,
+      "description": "the secret key of your app"
+    },
+    "APP2": {
+      "required": false,
+      "description": "If you have multiple apps, the app_id of your 2nd app"
+    },
+    "APP2_NAME": {
+      "required": false,
+      "description": "If you have multiple apps, the name of your 2nd app"
+    },
+    "APP2_SECRET": {
+      "required": false,
+      "description": "If you have multiple apps, the secret key of your 2nd app"
+    },
+
+  }
+}

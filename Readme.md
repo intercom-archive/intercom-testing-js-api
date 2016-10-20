@@ -55,3 +55,7 @@ APP2_SECRET=""
 ### Heroku 
 - Click the "Deploy to Heroku button"
 - Be warned that Acquire depends on the Messenger being able to create a first-party cookie for *.customer-domain.com. This will fail (with modern browsers) on *.customer-app.firebaseapp.com and *.customer-app.herokuapp.com, or any domain registered as a public suffix, https://publicsuffix.org [[Source - Intercom Docs](https://docs.intercom.com/install-on-your-product-or-site/quick-install/install-intercom-acquire-on-your-website)]
+
+## Demo
+
+![Demo](demo.gif)

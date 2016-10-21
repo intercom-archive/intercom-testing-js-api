@@ -1,21 +1,69 @@
 <meta name=viewport content="width=device-width,initial-scale=1">
 <style>
-button, input {
+button {
 	display: block;
+}
+input, select {
+	border: 1px solid #ccc;
+}
+label input{
+	margin-left: 0.5em;
+	font-size: 1.2em;
+}
+h1 {
+	margin: 0;
 }
 h4 {
 	margin: 0;
-	margin-top: 1em;
+}
+pre {
+	background-color: #eee;
+	padding: 3px;
+	border: 1px solid #777;
 }
 fieldset{
-	padding: 3px;
+	padding: 5px;
+	margin-top: 0.5em;
+	border: 1px solid #666;
+}
+legend{
+	font-weight: bold;
+}
+label{
+
 }
 textarea {
 	font-family: monospace;
+	width: 400px;
+	min-height: 50px;
+	max-height: 80px;
+	font-size: 1.2em;
+}
+button{
+	font-size: 1em;
+	padding: 10px;
+	background-color: #298EE8;
+	color: #fff;
+	border: 1px solid white;
+	border-radius: 5px;
+}
+#log{
+	font-family: monospace;
+	max-height: 400px;
+	border: 1px solid black;
+	padding: 5px;
 }
 
 .intercom-launcher-frame{
 	left: 100px;
+}
+.section{
+	border: 1px solid #ddd;
+	padding: 10px;
+	margin-bottom: 5px;
+}
+button{
+	margin: 0.5em 0;
 }
 
 </style>
@@ -28,11 +76,12 @@ textarea {
 <div class="section">
 	<h1>Login / Logout</h1>
 	<pre>Intercom('boot', {app_id: APP_ID})</pre>
-	<button id="boot">Boot as Visitor i.e. Acquire Install. </button>
+	<button id="boot">Boot as Visitor i.e. Acquire Install</button>
 	<fieldset>
-		<label>name<input id="userName" class="input userDetails" data-attr="name" placeholder="user name"></label>
-		<label>email<input id="userEmail" class="input userDetails" data-attr="email" placeholder="user email"></label>
-		<label>user_id<input id="userID" class="input userDetails" data-attr="user_id" placeholder="user id"></label>
+	    <legend>User Details</legend>
+		<label>Name<input id="userName" class="input inline userDetails" data-attr="name" placeholder="name"></label>
+		<label>Email<input id="userEmail" class="input inline userDetails" data-attr="email" placeholder="email"></label>
+		<label>user_id<input id="userID" class="input inline userDetails" data-attr="user_id" placeholder="user id"></label>
 
 		<pre>Intercom('boot', {app_id: APP_ID, email: EMAIL, user_id: USER_ID, name: NAME})</pre>
 		<button id="bootUser">Boot as User i.e. User Install</button>
@@ -41,27 +90,27 @@ textarea {
 		<button id="loginUser">Login User i.e. User Install</button>
 	</fieldset>
 	<pre>Intercom('shutdown')</pre>
-    <button id="logout">Logout/Shutdown</button>
+	<button id="logout">Logout/Shutdown</button>
 </div>
 
 <div class="section">
 	<h1>Attributes</h1>
-	<fieldset>
 		<h4>Update Metadata via individual attributes</h4>
 		<pre>Intercom('update', {attribute_name: attribute_value})</pre>
 		<label>Name<input id="attributeName" placeholder="attribute name"></label>
 		<label>Value<input id="attributeValue" placeholder="attribute value"></label>
-		<button id="attributeUpdate">Update data</button>
+		<button id="attributeUpdate">Update Attribute</button>
+
 		<h4>Update via raw Javascript</h4>
 		<pre>Intercom('update', attributes)</pre>
 		<textarea id="attributeJS"></textarea>
-		<button id="attributeUpdateJS">Update data</button>
-	</fieldset>
+		<button id="attributeUpdateJS">Update Attribute via raw Javascript</button>
 </div>
 <div class="section">
 	<h1>Events</h1>
 	<label>Name<input id="eventName" placeholder="event name"></label>
 	<fieldset>
+	    <legend>Event Metadata (leave blank if not needed) </legend>
 		<h4>Update Metadata via individual attributes</h4>
 		<pre>Intercom('trackEvent', eventName) / 
 Intercom('trackEvent', eventName, {eventMetadataName: eventMetadataValue})</pre>
@@ -72,21 +121,55 @@ Intercom('trackEvent', eventName, {eventMetadataName: eventMetadataValue})</pre>
 		<h4>Update Metadata via raw Javascript</h4>
 		<pre>Intercom('trackEvent', eventName, eventMetadata)</pre>
 		<textarea id="eventMetadataJS"></textarea>
-		<button id="eventSubmitJS">Submit Event via Javascript</button>
+		<button id="eventSubmitJS">Submit Event via raw Javascript</button>
+	</fieldset>
+</div>
+<div class="section">
+	<h1>Miscellaneous Functions</h1>
+	<fieldset>
+		<pre>Intercom('show') / Intercom('hide')</pre>
+		<button href='' onclick="javascript:Intercom('show')" style="display: inline">Intercom('show')</button>
+		<button href='' onclick="javascript:Intercom('hide')" style="display: inline">Intercom('hide')</button>
+		<pre>Intercom('showNewMessage', customPrefilledMessage);</pre>
+		<label>Custom Prefilled Message<input id="customPrefilledMessage" placeholder="Custom Prefilled Message"></label>
+		<button href='' onclick="javascript:Intercom('showNewMessage', $('#customPrefilledMessage').val());">Intercom('showNewMessage',customPrefilledMessage);</button>
+		<pre>Intercom('getVisitorId')</pre>
+		<button href='' onclick="alert('Visitor ID: ' + Intercom('getVisitorId')); showLog('Visitor ID: ' + Intercom('getVisitorId'))">Intercom('getVisitorId')</button>
 	</fieldset>
 </div>
 
-
-
-
-
+<div class="section">
+	<h1>Log</h1>
+	<div id="log">
+	</div>
+</div>
 <script src="jquery.min.js"></script>
 <script>
+
+
+
 function log(str, data){
+	showLog(str,data)
 	if(data)
 		console.log(str, data);
 	else
 		console.log(str);
+}
+function showLog(str, data){
+	var d = new Date();
+	var output = "";
+	output += d.getFullYear() +
+			"-" + (d.getMonth()+1) +
+			"-" + d.getDate() +
+			" " + d.getHours() +
+			":" + d.getMinutes() +
+			":" + d.getSeconds();
+
+	output += ": " + str;
+	if(data) output += "(Data: + " + JSON.stringify(data) + ")";
+	var el = $("<div></div>");
+	el.text(output);
+	$("#log").prepend(el);
 }
 
 function getCurrentAppID(){ return getCurrentAppDetails().id || ""; }
@@ -137,20 +220,20 @@ function generateIntercomSettingsObject(dataObject, callback){
 	dataObject.app_id = getCurrentAppID();
 	var dataToHash = (dataObject.user_id || dataObject.email);
 	if(dataToHash){
-    $.ajax({
-      "url": "/user_hash"
-      ,"method": "POST"
-      ,"data": {mode: "user_hash",app_id: dataObject.app_id, data: dataToHash}
-      ,"dataType": "json"
-      ,"success": function(data){
-        dataObject.user_hash = data.user_hash;
-        if(callback) callback(dataObject);
-      }
-    });
-    return;
+		$.ajax({
+			"url": "/user_hash"
+			,"method": "POST"
+			,"data": {mode: "user_hash",app_id: dataObject.app_id, data: dataToHash}
+			,"dataType": "json"
+			,"success": function(data){
+				dataObject.user_hash = data.user_hash;
+				if(callback) callback(dataObject);
+			}
+		});
+		return;
 	}
 	log("Generated intercomSettings", dataObject);
-  if(callback) callback(dataObject)
+	if(callback) callback(dataObject)
 	else return dataObject;
 }
 function getLoginDetails(){
@@ -177,6 +260,12 @@ function getEventData(){
 	if(metadata != null) data.metadata = metadata;
 	return data;
 }
+function getEventDataJS(){
+	var data = { name: getEventName() };
+	var metadata = getEventMetadata();
+	if(metadata != null) data.metadata = metadata;
+	return data;
+}
 function getAppData(){
 	var data = {};
 	if(getAppID()){
@@ -193,7 +282,7 @@ function dbSetValue(key,data){
 	localStorage.setItem(key, data);
 }
 function loadSavedData(){
-  uiLoadSavedApps(uilLoadPreviousValues);
+	uiLoadSavedApps(uilLoadPreviousValues);
 };
 function dbGetLastApp(){
 	return dbGetValue("last_app");
@@ -210,40 +299,38 @@ function uilLoadPreviousValues(){
 	getUIEventMetadataName().val(dbGetValue("last_event_metadata_name"));
 	getUIEventMetadataValue().val(dbGetValue("last_event_metadata_value"));
 	getUIEventMetadataJS().val(dbGetValue("last_event_metadata_js"));
-
-
 }
 
 function uiLoadSavedApps(callback){
 	var apps = getDBSavedApps(function(apps){
-    log("Loading saved apps", apps);
-  	var appsUI = getUIAppList();
-  	appsUI.empty();
-  	var appUI = $("<option value=''>-- Select app --</option>");
-  	appsUI.append(appUI);
-  	for(var i = 0; i < apps.length; i++){
-  		appUI = $("<option></option>");
-  		var app = apps[i];
-  		appUI.text(app.name);
-  		appUI.val(app.id);
-  		appsUI.append(appUI);
-  	}
-    if(callback)callback();
-  });
+	log("Loading saved apps", apps);
+	var appsUI = getUIAppList();
+	appsUI.empty();
+	var appUI = $("<option value=''>-- Select app --</option>");
+	appsUI.append(appUI);
+	for(var i = 0; i < apps.length; i++){
+		appUI = $("<option></option>");
+		var app = apps[i];
+		appUI.text(app.name);
+		appUI.val(app.id);
+		appsUI.append(appUI);
+	}
+	if(callback)callback();
+	});
 }
 function getDBSavedApps(callback){
-  $.ajax({
-    "url": "/apps"
-    ,"dataType": "json"
-    ,"success": function(apps){
-      var appList = [];
-  		for(var i = 0; i < apps.length; i++){
-  			var app = parseSavedApp(apps[i]);
-  			if(app) appList.push(app);
-  		}
-      if(callback) callback(appList);
-    }
-  });
+	$.ajax({
+	"url": "/apps"
+	,"dataType": "json"
+	,"success": function(apps){
+		var appList = [];
+		for(var i = 0; i < apps.length; i++){
+			var app = parseSavedApp(apps[i]);
+			if(app) appList.push(app);
+		}
+		if(callback) callback(appList);
+	}
+	});
 }
 function parseSavedApp(app){
 	var data = {};
@@ -252,7 +339,19 @@ function parseSavedApp(app){
 	data.name = app.name || app.id;
 	return data;
 }
+function initCallbacks(){
+	Intercom('onShow', function() {
+		log("Intercom('onShow', function(){}) triggered");
+	});
 
+	Intercom('onHide', function() {
+		log("Intercom('onHide', function(){}) triggered");
+	});
+	Intercom('onUnreadCountChange', function(unreadCount) {
+		log("Intercom('onUnreadCountChange', function(){}) triggered\n" +
+		'Current unread count: ' + unreadCount);
+	});
+}
 function bindEventHandlers(){
 
 	getUIAppList().change(function(){
@@ -270,6 +369,7 @@ function bindEventHandlers(){
 	$("#boot").click(function(){
 		log("Initialise Acquire: Intercom('boot', {app_id: APP_ID});");
 		Intercom("boot", generateIntercomSettingsObject());
+		initCallbacks();
 	});
 	$("#bootUser").click(function(){
 		log("Initialise User: Intercom('boot', user_data);");
@@ -279,7 +379,8 @@ function bindEventHandlers(){
 		dbSetValue("last_user_email", loginData.email || "");
 		dbSetValue("last_user_id", loginData.user_id || "");
 
-    generateIntercomSettingsObject(loginData, function(data){ Intercom("boot", data) });
+		generateIntercomSettingsObject(loginData, function(data){ Intercom("boot", data) });
+		initCallbacks();
 	});
 	$("#loginUser").click(function(){
 		log("Update User: Intercom('update', user_data);");
@@ -287,7 +388,7 @@ function bindEventHandlers(){
 		dbSetValue("last_user_name", loginData.name || "");
 		dbSetValue("last_user_email", loginData.email || "");
 		dbSetValue("last_user_id", loginData.user_id || "");
-    	generateIntercomSettingsObject(loginData, function(data){ Intercom("update", data) });
+		generateIntercomSettingsObject(loginData, function(data){ Intercom("update", data) });
 	});
 
 	$("#attributeUpdate").click(function(){
@@ -303,10 +404,16 @@ function bindEventHandlers(){
 	});
 	$("#attributeUpdateJS").click(function(){
 		var attributeData = getAttrJS();
-		var attributeDataJson = eval(attributeData);
-		log("Update Attribute: Intercom('update');", attributeDataJson);
 		dbSetValue("last_attribute_js", attributeData);
-		Intercom("update", attributeDataJson);
+		try{
+			eval("var attributeDataJson = " + attributeData);
+			log("Update Attribute: Intercom('update');", attributeDataJson);
+			Intercom("update", attributeDataJson);
+		}
+		catch(err){
+			alert("Error: " + err.message);
+			throw err;
+		}
 	});
 
 	$("#eventSubmit").click(function(){
@@ -328,40 +435,36 @@ function bindEventHandlers(){
 		}
 	});
 	$("#eventSubmitJS").click(function(){
-		var eventData = getEventData();
-		log("Submit Event: Intercom('trackEvent')", eventData);
+		var eventData = getEventDataJS();
 
 		dbSetValue("last_event_name", eventData.name || "");
 
 		var eventMetadataJS = getEventMetadataJS();
-		var eventMetadataJSJson = JSON.parse(eventMetadataJS);
 		dbSetValue("last_event_metadata_js", eventMetadataJS);
-		Intercom("trackEvent", getEventName(), eventMetadataJSJson);
+		try{
+			eval("var eventMetadataJSJson = " + eventMetadataJS);
+			eventData.metadata = eventMetadataJSJson;
+			log("Submit Event: Intercom('trackEvent')", eventData);
+			Intercom("trackEvent", getEventName(), eventMetadataJSJson);
+		}
+		catch(err){
+			alert("Error: " + err.message);
+			throw err;
+		}
+
 	});	
 
 }
 $(document).ready(function(){
 	loadSavedData();
 	bindEventHandlers();
-  var initialised = false;
-  $(getUIAppList()).on('change', function(){
-      if(!initialised){
-        initialised = true;
-        if($(getUIAppList()).find(":selected").size() > 0){
-      		log("Auto booting based on previous details");
-      		Intercom("boot", generateIntercomSettingsObject());
-      	}
-      }
-  })
-
 });
 
 
 var APP_ID = ((dbGetLastApp() || "").split("||")[0]) || getCurrentAppID();
-log("APP_ID: " + APP_ID);
+log("Current app_id: " + APP_ID);
 (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;
 s.src='https://widget.intercom.io/widget/'+APP_ID;var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()
-
 
 
 

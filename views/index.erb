@@ -30,7 +30,7 @@ legend{
 	font-weight: bold;
 }
 label{
-
+	display: block;
 }
 textarea {
 	font-family: monospace;
@@ -83,6 +83,17 @@ button{
 		<label>Name<input id="userName" class="input inline userDetails" data-attr="name" placeholder="name"></label>
 		<label>Email<input id="userEmail" class="input inline userDetails" data-attr="email" placeholder="email"></label>
 		<label>user_id<input id="userID" class="input inline userDetails" data-attr="user_id" placeholder="user id"></label>
+
+
+		<fieldset>
+		    <legend>Company Details</legend>
+
+			<label>Company Name <input id="userCompanyName"           placeholder="company name"></label>
+			<label>Company ID   <input id="userCompanyID"             placeholder="company id"></label>
+			<label>Custom Attribute Name         <input id="userCompanyAttributeName"  placeholder="company attribute name"></label>
+			<label>Custom Attribute Value        <input id="userCompanyAttributeValue" placeholder="company attribute value"></label>
+		</fieldset>
+
 
 		<pre>Intercom('boot', {app_id: APP_ID, email: EMAIL, user_id: USER_ID, name: NAME})</pre>
 		<button id="bootUser">Boot as User i.e. User Install</button>
@@ -180,6 +191,13 @@ function getAppName(){ return getUIAppName().val(); }
 function getAppID(){ return getUIAppID().val(); }
 function getAppSecret(){ return getUIAppSecret().val(); }
 function getUserName(){ return getUIUserName().val(); }
+
+function getCompanyName() { return getUICompanyName().val() };
+function getCompanyId() { return getUICompanyId().val() };
+function getCompanyAttr() { return getUICompanyAttr().val() };
+function getCompanyValue() { return getUICompanyValue().val() };
+
+
 function getUserEmail(){ return getUIUserEmail().val(); }
 function getUserID(){ return getUIUserID().val(); }
 function getAttrName(){ return getUIAttrName().val(); }
@@ -191,6 +209,10 @@ function getEventMetadataValue(){ return getUIEventMetadataValue().val(); }
 function getEventMetadataJS(){ return getUIEventMetadataJS().val(); }
 
 
+function getUICompanyName() {return $("#userCompanyName"); }
+function getUICompanyId() {return $("#userCompanyID"); }
+function getUICompanyAttr() {return $("#userCompanyAttributeName"); }
+function getUICompanyValue() {return $("#userCompanyAttributeValue"); }
 function getUIAppName(){ return $("#appName"); }
 function getUIAppID(){ return $("#appID"); }
 function getUIAppSecret(){ return $("#appSecret"); }
@@ -242,6 +264,19 @@ function getLoginDetails(){
 	if(getUserName()) data.name = getUserName();
 	if(getUserEmail()) data.email = getUserEmail();
 	if(getUserID()) data.user_id = getUserID();
+
+	if(getUserName()) data.name = getUserName();
+	if(getUserEmail()) data.email = getUserEmail();
+	if(getUserID()) data.user_id = getUserID();
+
+	var coData = {}
+	if(getCompanyName()) coData.name = getCompanyName();
+	if(getCompanyId()) coData.id = getCompanyId();
+	if(getCompanyAttr()) coData[getCompanyAttr()] = getCompanyValue();
+	if(getCompanyId()){
+		data.company = coData;
+	}
+
 	return data;
 }
 function getAttrData(){
@@ -300,6 +335,30 @@ function uilLoadPreviousValues(){
 	getUIEventMetadataName().val(dbGetValue("last_event_metadata_name"));
 	getUIEventMetadataValue().val(dbGetValue("last_event_metadata_value"));
 	getUIEventMetadataJS().val(dbGetValue("last_event_metadata_js"));
+
+	getUICompanyName().val(dbGetValue("last_company_name"));
+	getUICompanyId().val(dbGetValue("last_company_id"));
+	getUICompanyAttr().val(dbGetValue("last_company_attr"));
+	getUICompanyValue().val(dbGetValue("last_company_value"));
+
+}
+
+function saveLoginData(data){
+	dbSetValue("last_user_name", data.name || "");
+	dbSetValue("last_user_email", data.email || "");
+	dbSetValue("last_user_id", data.user_id || "");
+	if(data.company){
+
+		for(var key in data.company){
+			if(key != "name" && key != "id"){
+				dbSetValue("last_company_attr", key || "");
+				dbSetValue("last_company_value",data.company[key] || "");
+			}
+		}
+
+		dbSetValue("last_company_name", data.company.name || "");
+		dbSetValue("last_company_id",   data.company.id || "");
+	}
 }
 
 function uiLoadSavedApps(callback){
@@ -376,19 +435,15 @@ function bindEventHandlers(){
 		log("Initialise User: Intercom('boot', user_data);");
 
 		var loginData = getLoginDetails();
-		dbSetValue("last_user_name", loginData.name || "");
-		dbSetValue("last_user_email", loginData.email || "");
-		dbSetValue("last_user_id", loginData.user_id || "");
-
+		saveLoginData(loginData);
 		generateIntercomSettingsObject(loginData, function(data){ Intercom("boot", data) });
 		initCallbacks();
 	});
 	$("#loginUser").click(function(){
 		log("Update User: Intercom('update', user_data);");
 		var loginData = getLoginDetails();
-		dbSetValue("last_user_name", loginData.name || "");
-		dbSetValue("last_user_email", loginData.email || "");
-		dbSetValue("last_user_id", loginData.user_id || "");
+		saveLoginData(loginData);
+
 		generateIntercomSettingsObject(loginData, function(data){ Intercom("update", data) });
 	});
 
